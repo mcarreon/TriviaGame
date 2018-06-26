@@ -1,9 +1,11 @@
 var userVar = {
+    userWon: false,
     guessCorrect: 0,
     guessIncorrect: 0
 }
 
 var gameVar = {
+    gameStarted: false,
     countTime: 30,
     msg: ['Out of time!', 'Nope!', 'Correct!'],
 
@@ -24,9 +26,18 @@ var gameVar = {
 }
 
 var gameCtrl = {
+    //creates start button with two types based off game state
     createStartBtn: function () {
-        $('#button-area').html('<button id="start-button">START</button>');
+        if (!gameVar.gameStarted) {
+            gameVar.gameStarted = true;
+            $('#button-area').html('<button id="start-button">Start</button>');
+        }
+        else {
+            $('#button-area').html('<button id="start-button">Would you like to retry?</button>');
+        }
+        
     },
+    //sets up area for question phase
     createQuestionCard: function () {
         var timer = $('<h2>');
         timer.text('You have ' + gameVar.countTime + ' seconds left.');
@@ -34,15 +45,27 @@ var gameCtrl = {
 
         for (var i = 0; i < 4; i++) {
             var answer = $('<h3>');
-            answer.text();
+            answer.text(gameVar.currentQuest.options[i]);
+            $('#answer-area').append(answer);
         }
     },
-    pickQuest: function () {
-
-        var random = Math.floor(Math.random());
-        gameVar.currentQuest
+    //picks a quest with two options, current and next
+    pickQuest: function (type) {
+        var random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
+        if (type === 'current') {
+            gameVar.currentQuest = gameVar.listQuest[random];
+            console.log(gameVar.currentQuest);
+        }
+        else if (type === 'next') {
+            gameVar.nextQuest = gameVar.listQuest[random];
+            console.log(gameVar.nextQuest);
+        }    
+        gameVar.listQuest.splice(random, 1);
+        
+        console.log(gameVar.listQuest);
     },
-    pickNextQuest: function () {
+    //creates result card based off of userWon
+    createResultCard: function (bool) {
 
     }
 }
@@ -53,9 +76,12 @@ $(document).ready(function () {
 
     $('#start-button').on('click', function() {
         $('#button-area').empty();
-        gameVar.listQuest
-        
+        gameVar.listQuest = gameVar.staticListQuest;
+
+        gameCtrl.pickQuest('current');
+        gameCtrl.pickQuest('next');
         gameCtrl.createQuestionCard();
+
     });
 })
 
