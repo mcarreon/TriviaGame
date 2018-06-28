@@ -8,10 +8,16 @@ var $answerArea = $('#answer-area');
 //holds user values
 var userVar = {
     userWon: false,
-    userAnswer: 0, 
+    userAnswer: -1, 
     guessCorrect: 0,
     guessIncorrect: 0,
     endTime: 0,
+    varReset: function () {
+        userVar.userAnswer = -1;
+        userVar.guessCorrect = 0;
+        userVar.endTime = 0;
+        userVar.userWon = false; 
+    }
 }
 
 //holds game relevant values
@@ -20,7 +26,6 @@ var gameVar = {
     msg: ['Out of time!', 'Nope!', 'Correct!'],
 
     currentQuest: {},
-    nextQuest: {},
     listQuest: [],
     staticListQuest: [{
             question: 'What is the 3rd letter?',
@@ -35,6 +40,10 @@ var gameVar = {
             picture: 'url'
         },
     ],
+    varReset: function () {
+        gameVar.currentQuest = {};
+        gameVar.listQuest = [];
+    }
 }
 
 //game functions
@@ -90,20 +99,14 @@ var gameCtrl = {
 
     pickQuests: function () {
         var random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
-        
-        gameVar.currentQuest = gameVar.listQuest[random];
-        console.log(gameVar.currentQuest);
-
-        gameVar.listQuest.splice(random, 1);
-
+             
         if (gameVar.listQuest.length > 0) {
-            random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
             
-            gameVar.nextQuest = gameVar.listQuest[random];
-            console.log(gameVar.nextQuest);
-            
+            gameVar.currentQuest = gameVar.listQuest[random];
             gameVar.listQuest.splice(random, 1);
+            console.log(gameVar.currentQuest);
         }
+        console.log(gameVar.staticListQuest);
         console.log(gameVar.listQuest);
     },
     //clears areas to prepare 
@@ -117,21 +120,21 @@ var gameCtrl = {
     createResultCard: function (bool) {
         gameCtrl.areaClear();
 
+        //resets user answer
+        userVar.userAnswer = -1;
+
         userVar.endTime = clock.countTime;
 
         //shows the answer
         var question = $('<h3>');
         if (bool) {
             question.text(gameVar.msg[2]);
+            userVar.guessCorrect++;
         }
         else {
             question.text(gameVar.msg[1]);
         }
         
-        
-        
-
-
         //sets the timer
         var timer = $('<h2>');
         if (clock.countTime > 0) {
@@ -141,8 +144,6 @@ var gameCtrl = {
             timer.text(`You didn't answer in time :(`);
             question.text(gameVar.msg[0]);
         }
-        
-
         
         //shows picture
         var image = $('<img>');
@@ -159,9 +160,27 @@ var gameCtrl = {
 
     },
     //proceeds to show the next question
-    resultToNext: function () {
+    nextQuest: function () {
+        userVar.userWon = false;
+        gameCtrl.areaClear();
+        gameCtrl.pickQuests();
+        gameCtrl.createQuestionCard();        
+    }, 
+    //shows final game screen
+    finishGame: function () {
+        gameCtrl.areaClear();
 
+        
+        var result = $('<h2>');
+        result.text(`Your final score is ${userVar.guessCorrect}/${gameVar.staticListQuest.length}.`);
+        
+        $timerArea.append(result);
+        gameCtrl.createStartBtn(gameVar.gameStarted);
+
+        gameVar.varReset();
+        userVar.varReset();
     }
+
 }
 
 //holds the game clock
@@ -178,6 +197,7 @@ var clock = {
     countClock: function () {
         if (clock.countTime === 0) {
             clock.resetClock();
+            debugger;
             gameCtrl.createResultCard();
             clock.countTime = 30;
         } else {
@@ -197,7 +217,7 @@ $(document).ready(function () {
 
     $('#start-button').on('click', function () {
         $buttonArea.empty();
-        gameVar.listQuest = gameVar.staticListQuest;
+        gameVar.listQuest = gameVar.staticListQuest.slice(0);
 
         gameCtrl.pickQuests();
         gameCtrl.createQuestionCard();
@@ -211,8 +231,15 @@ $(document).ready(function () {
             userVar.userWon = true;
         }
 
-        clock.resetClock(); 
+        clock.resetClock();
         gameCtrl.createResultCard(userVar.userWon);
+        
+        if (gameVar.listQuest.length > 0) {
+            var timeout = setTimeout(gameCtrl.nextQuest, 5000);
+        } 
+        else {
+            var timeout = setTimeout(gameCtrl.finishGame(), 5000);
+        }
 
         console.log(userVar.userWon);
     });
