@@ -12,10 +12,12 @@ var userVar = {
     guessCorrect: 0,
     guessIncorrect: 0,
     endTime: 0,
+    totalTime: 0,
     varReset: function () {
         userVar.userAnswer = -1;
         userVar.guessCorrect = 0;
         userVar.endTime = 0;
+        userVar.totalTime = 0;
         userVar.userWon = false; 
     }
 }
@@ -98,7 +100,7 @@ var gameCtrl = {
     */
 
     pickQuests: function () {
-        var random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
+        var random = Math.floor(Math.random() * gameVar.listQuest.length);
              
         if (gameVar.listQuest.length > 0) {
             
@@ -123,7 +125,9 @@ var gameCtrl = {
         //resets user answer
         userVar.userAnswer = -1;
 
+        userVar.totalTime += (30 - clock.countTime); 
         userVar.endTime = clock.countTime;
+
 
         //shows the answer
         var question = $('<h3>');
@@ -159,8 +163,18 @@ var gameCtrl = {
         $answerArea.append(image);
 
     },
-    //proceeds to show the next question
+    //handles timeout for showing next quest or result screen
     nextQuest: function () {
+        if (gameVar.listQuest.length > 0) {
+            var timeout = setTimeout(gameCtrl.proceed, 4000);
+        } 
+        else {
+            var timeout = setTimeout(gameCtrl.finishGame, 4000);
+        }
+        clock.countTime = 30;
+    },
+    //proceeds to show the next question
+    proceed: function () {
         userVar.userWon = false;
         gameCtrl.areaClear();
         gameCtrl.pickQuests();
@@ -173,8 +187,13 @@ var gameCtrl = {
         
         var result = $('<h2>');
         result.text(`Your final score is ${userVar.guessCorrect}/${gameVar.staticListQuest.length}.`);
+
+        var stats = $('<h3>');
+        stats.text(`You took ${userVar.totalTime} seconds in total to finish the quiz.`);
+
         
         $timerArea.append(result);
+        $questionArea.append(stats);
         gameCtrl.createStartBtn(gameVar.gameStarted);
 
         gameVar.varReset();
@@ -197,9 +216,9 @@ var clock = {
     countClock: function () {
         if (clock.countTime === 0) {
             clock.resetClock();
-            debugger;
             gameCtrl.createResultCard();
-            clock.countTime = 30;
+            gameCtrl.nextQuest();
+
         } else {
             clock.countTime -= 1;
             $('h2').text('You have ' + clock.countTime + ' seconds left.');
@@ -215,8 +234,12 @@ var clock = {
 $(document).ready(function () {
     gameCtrl.createStartBtn();
 
-    $('#start-button').on('click', function () {
-        $buttonArea.empty();
+    $(document).on('click', '#start-button', function () {
+        gameCtrl.areaClear();
+
+        //loner timer reset for post-game reset
+        clock.countTime = 30;
+
         gameVar.listQuest = gameVar.staticListQuest.slice(0);
 
         gameCtrl.pickQuests();
@@ -234,12 +257,7 @@ $(document).ready(function () {
         clock.resetClock();
         gameCtrl.createResultCard(userVar.userWon);
         
-        if (gameVar.listQuest.length > 0) {
-            var timeout = setTimeout(gameCtrl.nextQuest, 5000);
-        } 
-        else {
-            var timeout = setTimeout(gameCtrl.finishGame(), 5000);
-        }
+        gameCtrl.nextQuest();
 
         console.log(userVar.userWon);
     });
