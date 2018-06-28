@@ -1,9 +1,19 @@
+//accessor variables
+var $gameArea = $('#game-area');
+var $buttonArea = $('#button-area');
+var $timerArea = $('#timer-area');
+var $questionArea = $('#question-area');
+var $answerArea = $('#answer-area');
+
+//holds user values
 var userVar = {
     userWon: false,
     guessCorrect: 0,
-    guessIncorrect: 0
+    guessIncorrect: 0,
+    endTime: 0,
 }
 
+//holds game relevant values
 var gameVar = {
     gameStarted: false,
     msg: ['Out of time!', 'Nope!', 'Correct!'],
@@ -24,14 +34,15 @@ var gameVar = {
     ],
 }
 
+//game functions
 var gameCtrl = {
     //creates start button with two types based off game state
     createStartBtn: function () {
         if (!gameVar.gameStarted) {
             gameVar.gameStarted = true;
-            $('#button-area').html('<button id="start-button">Start</button>');
+            $buttonArea.html('<button id="start-button">Start</button>');
         } else {
-            $('#button-area').html('<button id="start-button">Would you like to retry?</button>');
+            $buttonArea.html('<button id="start-button">Would you like to retry?</button>');
         }
 
     },
@@ -39,19 +50,21 @@ var gameCtrl = {
     createQuestionCard: function () {
         var timer = $('<h2>');
         timer.text('You have ' + clock.countTime + ' seconds left.');
-        $('#timer-area').append(timer);
+        $timerArea.append(timer);
         clock.startClock();
 
         var question = $('<h3>');
         question.text(gameVar.currentQuest.question);
-        $('#question-area').append(question);
+        $questionArea.append(question);
 
         for (var i = 0; i < 4; i++) {
             var answer = $('<h4>');
             answer.text(gameVar.currentQuest.options[i]);
-            $('#answer-area').append(answer);
+            $answerArea.append(answer);
         }
     },
+
+    /* pre-function, replaced byt pickQuests
     //picks a quest with two options, current and next
     pickQuest: function (type) {
         var random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
@@ -66,18 +79,54 @@ var gameCtrl = {
 
         console.log(gameVar.listQuest);
     },
+    */
+
+    pickQuests: function () {
+        var random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
+        
+        gameVar.currentQuest = gameVar.listQuest[random];
+        console.log(gameVar.currentQuest);
+
+        gameVar.listQuest.splice(random, 1);
+
+        if (gameVar.listQuest.length > 0) {
+            random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
+            
+            gameVar.nextQuest = gameVar.listQuest[random];
+            console.log(gameVar.nextQuest);
+            
+            gameVar.listQuest.splice(random, 1);
+        }
+        console.log(gameVar.listQuest);
+    },
     //clears areas to prepare 
     areaClear: function () {
-        $('#timer-area').empty();
-        $('#question-area').empty();
-        $('#answer-area').empty();
+        $timerArea.empty();
+        $questionArea.empty();
+        $answerArea.empty();
     },
     //creates result card based off of userWon
     createResultCard: function () {
+        user.endTime = clock.countTime;
 
+        //sets the timer
+        var timer = $('<h2>');
+        if (clock.countTime > 0) {
+            timer.text(`You finished with ${user.endTime} seconds left.`);
+        }
+        else {
+            timer.text(`You didn't answer in time :(`);
+        }
+        $timerArea.append(timer);
+
+        //shows the answer
+        
+
+        //shows picture 
     },
 }
 
+//holds the game clock
 var clock = {
     timerStarted: false,
     countTime: 30,
@@ -103,16 +152,15 @@ var clock = {
     }
 }
 
+
 $(document).ready(function () {
     gameCtrl.createStartBtn();
 
-
     $('#start-button').on('click', function () {
-        $('#button-area').empty();
+        $buttonArea.empty();
         gameVar.listQuest = gameVar.staticListQuest;
 
-        gameCtrl.pickQuest('current');
-        gameCtrl.pickQuest('next');
+        gameCtrl.pickQuests();
         gameCtrl.createQuestionCard();
 
 
