@@ -8,6 +8,7 @@ var $answerArea = $('#answer-area');
 //holds user values
 var userVar = {
     userWon: false,
+    userAnswer: 0, 
     guessCorrect: 0,
     guessIncorrect: 0,
     endTime: 0,
@@ -24,12 +25,14 @@ var gameVar = {
     staticListQuest: [{
             question: 'What is the 3rd letter?',
             options: ['a', 'b', 'c', 'd'],
-            correct: 'c'
+            correct: 2,
+            picture: 'url'
         },
         {
             question: 'What is the 2rd letter?',
             options: ['a', 'b', 'c', 'd'],
-            correct: 'b'
+            correct: 1,
+            picture: 'url'
         },
     ],
 }
@@ -59,12 +62,16 @@ var gameCtrl = {
 
         for (var i = 0; i < 4; i++) {
             var answer = $('<h4>');
+            answer.attr({
+                'answer-id': i,
+                'class': 'answers',
+            });
             answer.text(gameVar.currentQuest.options[i]);
             $answerArea.append(answer);
         }
     },
 
-    /* pre-function, replaced byt pickQuests
+    /* old version, replaced byt pickQuests
     //picks a quest with two options, current and next
     pickQuest: function (type) {
         var random = Math.floor(Math.random() + gameVar.listQuest.length) - 1;
@@ -101,29 +108,60 @@ var gameCtrl = {
     },
     //clears areas to prepare 
     areaClear: function () {
+        $buttonArea.empty();
         $timerArea.empty();
         $questionArea.empty();
         $answerArea.empty();
     },
     //creates result card based off of userWon
-    createResultCard: function () {
-        user.endTime = clock.countTime;
+    createResultCard: function (bool) {
+        gameCtrl.areaClear();
+
+        userVar.endTime = clock.countTime;
+
+        //shows the answer
+        var question = $('<h3>');
+        if (bool) {
+            question.text(gameVar.msg[2]);
+        }
+        else {
+            question.text(gameVar.msg[1]);
+        }
+        
+        
+        
+
 
         //sets the timer
         var timer = $('<h2>');
         if (clock.countTime > 0) {
-            timer.text(`You finished with ${user.endTime} seconds left.`);
+            timer.text(`You finished with ${userVar.endTime} seconds left.`);
         }
         else {
             timer.text(`You didn't answer in time :(`);
+            question.text(gameVar.msg[0]);
         }
-        $timerArea.append(timer);
-
-        //shows the answer
         
 
-        //shows picture 
+        
+        //shows picture
+        var image = $('<img>');
+        image.attr({
+            class: 'answer-image',
+            alt: 'answer image',
+            src: '',
+        });
+        //src: gameVar.currentQuest.picture
+
+        $questionArea.append(question);
+        $timerArea.append(timer);
+        $answerArea.append(image);
+
     },
+    //proceeds to show the next question
+    resultToNext: function () {
+
+    }
 }
 
 //holds the game clock
@@ -140,6 +178,7 @@ var clock = {
     countClock: function () {
         if (clock.countTime === 0) {
             clock.resetClock();
+            gameCtrl.createResultCard();
             clock.countTime = 30;
         } else {
             clock.countTime -= 1;
@@ -162,7 +201,19 @@ $(document).ready(function () {
 
         gameCtrl.pickQuests();
         gameCtrl.createQuestionCard();
+        gameVar.gameStarted = true;
+    });
 
+    $(document).on('click', '.answers', function () {
+        userVar.userAnswer = parseInt($(this).attr('answer-id'));
+        
+        if (gameVar.currentQuest.correct === userVar.userAnswer) {     
+            userVar.userWon = true;
+        }
 
+        clock.resetClock(); 
+        gameCtrl.createResultCard(userVar.userWon);
+
+        console.log(userVar.userWon);
     });
 })
