@@ -108,39 +108,47 @@ var gameCtrl = {
     createStartBtn: function () {
         if (!gameVar.gameStarted) {
             gameVar.gameStarted = true;
-            $buttonArea.html('<button id="start-button">Start</button>');
+            $buttonArea.html('<button id="start-button" class="btn btn-primary">Press this button to play!</button>');
         } else {
-            $buttonArea.html('<button id="start-button">Would you like to retry?</button>');
+            $buttonArea.html('<button id="start-button" class="btn btn-primary">Would you like to retry?</button>');
         }
 
     },
     //sets up area for question phase
     createQuestionCard: function () {
-        var timer = $('<h2>');
+        var timer = $('<h4>');
+        timer.attr('class', 'timer');
         timer.text('You have ' + clock.countTime + ' seconds left.');
         $timerArea.append(timer);
         clock.startClock();
 
-        var question = $('<h3>');
+        var question = $('<h2>');
         question.text(gameVar.currentQuest.question);
         $questionArea.append(question);
 
         var answerPack = $('<div>');
+        answerPack.attr('class', 'row');
         var options = gameVar.currentQuest.options.slice(0);
         //console.log(options);
         
         while (options.length > 0) {  
             var random = Math.floor(Math.random() * options.length);
-       
+            
             var answer = $('<h4>');
             answer.text(options[random]);
             answer.attr({
                 'answer-id': options.length,
-                'class': 'answers',
+                'class': 'answers col-sm btn btn-primary',
             });
             options.splice(random, 1);
             answerPack.append(answer);            
             
+            if (options.length === 2) {
+                var breaker = $('<div>');
+                breaker.attr('class', 'w-100');
+                answerPack.append(breaker);
+            }
+
         }
         $answerArea.append(answerPack);
     },
@@ -162,26 +170,29 @@ var gameCtrl = {
             question.text(gameVar.msg[2]);
             userVar.guessCorrect++;
         }
+
+        var corAnswer = $('<h3>');
+        corAnswer.text(`The correct answer is: ${gameVar.currentQuest.correct}.`);
             
 
 
         //shows picture
         var image = $('<img>');        
         image.attr({
-            class: 'answer-image',
+            class: 'answer-image img-fluid',
             alt: 'incorrect answer :(',
             src: gameVar.incImg,
         });        
         if (bool) {
         image.attr({
-            class: 'answer-image',
-            alt: 'incorrect answer :(',
+            class: 'answer-image img-fluid',
+            alt: 'correct answer :(',
             src: gameVar.currentQuest.picture,
         });    
         }       
         
         //sets the timer
-        var timer = $('<h2>');
+        var timer = $('<h4>');
         if (clock.countTime > 0) {
             timer.text(`You finished with ${userVar.endTime} seconds left.`);
         }
@@ -189,7 +200,7 @@ var gameCtrl = {
             timer.text(`You didn't answer in time :(`);
             question.text(gameVar.msg[0]);
             image.attr({
-                class: 'answer-image',
+                class: 'answer-image img-fluid',
                 alt: 'too slow!',
                 src: gameVar.ootImg,
             });  
@@ -199,6 +210,7 @@ var gameCtrl = {
 
         $questionArea.append(question);
         $timerArea.append(timer);
+        $answerArea.append(corAnswer);
         $answerArea.append(image);
 
     },
@@ -294,7 +306,7 @@ var clock = {
 
         } else {
             clock.countTime -= 1;
-            $('h2').text('You have ' + clock.countTime + ' seconds left.');
+            $('.timer').text('You have ' + clock.countTime + ' seconds left.');
         }
     },
     resetClock: function () {
